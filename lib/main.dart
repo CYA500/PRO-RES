@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'providers/dashboard_provider.dart';
 import 'screens/connect_screen.dart';
 import 'screens/dashboard_screen.dart';
-import 'services/connectivity_service.dart';
+import 'package:pro_res/services/connectivity_service.dart' as svc;
 import 'theme.dart';
 
 void main() {
