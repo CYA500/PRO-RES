@@ -1,12 +1,18 @@
-name: AuraMonitor Ultra Build
-on: [push] # سيبدأ البناء فور رفع أي كود جديد
+name: AuraMonitor_Build
+
+on:
+  push:
+    branches:
+      - main
+      - master
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
@@ -19,29 +25,28 @@ jobs:
           flutter-version: '3.19.3'
           channel: 'stable'
 
-   - name: Production Fixes (SDK & Permissions)
+      - name: Android Production Fixes
         run: |
-          # إنشاء هيكل أندرويد باستخدام اسم متوافق مع قوانين دارت
+          # 1. إنشاء هيكل أندرويد باسم متوافق
           flutter create --project-name=pro_res . --platforms android
           
-          # رفع نسخة الـ SDK
+          # 2. تعديل minSdkVersion إلى 21
           sed -i 's/minSdkVersion .*/minSdkVersion 21/' android/app/build.gradle
           
-          # السماح بالاتصال المحلي
+          # 3. تفعيل الاتصال المحلي (HTTP/WS)
           sed -i 's/<application/<application android:usesCleartextTraffic="true"/' android/app/src/main/AndroidManifest.xml
           
-          # إضافة التصاريح
-          sed -i '/<\/manifest>/i <uses-permission android:name="android.permission.INTERNET" \/><uses-permission android:name="android.permission.CAMERA" \/>' android/app/src/main/AndroidManifest.xml
+          # 4. إضافة التصاريح اللازمة (الإنترنت والكاميرا)
+          sed -i '/<\/manifest>/i <uses-permission android:name="android.permission.INTERNET" />\n<uses-permission android:name="android.permission.CAMERA" />' android/app/src/main/AndroidManifest.xml
 
-      - name: Install Project Dependencies
+      - name: Get Dependencies
         run: flutter pub get
 
-      - name: Build Release APK
-        # استخدام --no-tree-shake-icons لضمان عدم اختفاء الأيقونات
+      - name: Build APK
         run: flutter build apk --release --no-tree-shake-icons
 
-      - name: Upload APK Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AuraMonitor-Final-Release
+          name: AuraMonitor-Release
           path: build/app/outputs/flutter-apk/app-release.apk
